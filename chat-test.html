@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat Test | Kick</title>
+    <link rel="stylesheet" href="/assets/index-5Ys7DmFI.css">
+    <style>
+        body { padding: 40px 0; }
+
+        .test-header {
+            max-width: 720px;
+            margin: 0 auto 32px;
+            padding: 0 20px;
+        }
+
+        .test-header h1 {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .status-pill {
+            font-family: var(--font-display);
+            font-size: .6rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            padding: 6px 16px;
+            border: 1px solid rgba(200, 148, 30, .3);
+            color: var(--color-text-muted);
+        }
+
+        .status-pill.connected {
+            border-color: #53FC18;
+            color: #53FC18;
+            background: rgba(83, 252, 24, .06);
+        }
+
+        .status-pill.error {
+            border-color: #FF4444;
+            color: #FF4444;
+            background: rgba(255, 68, 68, .06);
+        }
+
+        .status-pill.loading {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+            background: rgba(200, 148, 30, .06);
+            animation: blink 1.2s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .4; }
+        }
+
+        .channel-info {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .info-item {
+            font-family: var(--font-display);
+            font-size: .62rem;
+            letter-spacing: 2px;
+            color: var(--color-text-muted);
+        }
+
+        .info-item span {
+            color: var(--color-primary);
+            margin-left: 6px;
+        }
+
+        /* Chat kutusu */
+        .chat-box {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .chat-log {
+            background: linear-gradient(145deg, rgba(22, 16, 8, .97) 0%, rgba(16, 12, 6, .92) 100%);
+            border: 1px solid rgba(200, 148, 30, .14);
+            height: 500px;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            scroll-behavior: smooth;
+            position: relative;
+        }
+
+        .chat-log::-webkit-scrollbar { width: 4px; }
+        .chat-log::-webkit-scrollbar-track { background: transparent; }
+        .chat-log::-webkit-scrollbar-thumb { background: rgba(200, 148, 30, .3); border-radius: 2px; }
+
+        .chat-empty {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-muted);
+            font-style: italic;
+            font-size: .95rem;
+            gap: 8px;
+        }
+
+        .chat-empty .e-label {
+            font-family: var(--font-display);
+            font-size: .6rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--color-primary);
+            opacity: .5;
+        }
+
+        .msg {
+            display: flex;
+            gap: 10px;
+            align-items: baseline;
+            font-size: 1rem;
+            line-height: 1.5;
+            animation: msgIn .25s ease forwards;
+        }
+
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .msg-time {
+            font-family: var(--font-display);
+            font-size: .58rem;
+            letter-spacing: 1px;
+            color: rgba(138, 117, 96, .5);
+            flex-shrink: 0;
+            padding-top: 2px;
+        }
+
+        .msg-user {
+            font-family: var(--font-display);
+            font-size: .72rem;
+            letter-spacing: 1px;
+            font-weight: 700;
+            flex-shrink: 0;
+            position: relative;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .msg-user:hover { opacity: .8; }
+
+        /* Pop-up kart */
+        .user-popup {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 4px);
+            left: 0;
+            z-index: 100;
+            min-width: 220px;
+            background: linear-gradient(145deg, #1A1409, #0D0A04);
+            border: 1px solid rgba(200, 148, 30, .35);
+            padding: 14px 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,.6);
+            pointer-events: all;
+            /* Kullanıcı adı ile pop-up arasında görünmez köprü */
+            padding-bottom: 10px;
+            margin-bottom: -4px;
+        }
+
+        .msg-user:hover .user-popup,
+        .user-popup:hover { display: block; }
+
+        .popup-name {
+            font-family: var(--font-display);
+            font-size: .8rem;
+            letter-spacing: 2px;
+            color: var(--color-primary);
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+
+        .popup-link {
+            display: block;
+            font-family: var(--font-display);
+            font-size: .6rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--color-text-muted);
+            text-decoration: none;
+            padding: 6px 0;
+            border-top: 1px solid rgba(200, 148, 30, .1);
+            transition: color .2s;
+        }
+
+        .popup-link:hover { color: var(--color-primary); }
+
+        .msg-text {
+            color: var(--color-text-main);
+            font-size: .95rem;
+            word-break: break-word;
+        }
+
+        .msg-divider {
+            width: 100%;
+            height: 1px;
+            background: rgba(200, 148, 30, .07);
+            margin: 4px 0;
+            flex-shrink: 0;
+        }
+
+        /* Sistem mesajı */
+        .sys-msg {
+            font-family: var(--font-display);
+            font-size: .6rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--color-text-muted);
+            text-align: center;
+            padding: 4px 0;
+            opacity: .5;
+        }
+
+        /* Alt çubuk */
+        .chat-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            border: 1px solid rgba(200, 148, 30, .14);
+            border-top: none;
+            background: rgba(16, 12, 6, .8);
+        }
+
+        .msg-count {
+            font-family: var(--font-display);
+            font-size: .6rem;
+            letter-spacing: 2px;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+        }
+
+        .msg-count span {
+            color: var(--color-primary);
+            margin-left: 6px;
+        }
+
+        .clear-btn {
+            font-family: var(--font-display);
+            font-size: .58rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--color-text-muted);
+            background: transparent;
+            border: 1px solid rgba(200, 148, 30, .15);
+            padding: 5px 14px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .clear-btn:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        /* Raw data toggle */
+        .raw-toggle {
+            max-width: 720px;
+            margin: 16px auto 0;
+            padding: 0 20px;
+        }
+
+        .raw-toggle summary {
+            font-family: var(--font-display);
+            font-size: .62rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: color .2s;
+        }
+
+        .raw-toggle summary:hover { color: var(--color-primary); }
+
+        .raw-box {
+            margin-top: 12px;
+            background: rgba(16, 12, 6, .95);
+            border: 1px solid rgba(200, 148, 30, .1);
+            padding: 16px;
+            font-family: monospace;
+            font-size: .78rem;
+            color: #8A9A6A;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="test-header">
+        <a href="/" style="font-family:var(--font-display);font-size:.6rem;letter-spacing:3px;text-transform:uppercase;color:var(--color-text-muted);text-decoration:none;">← Ana Sayfa</a>
+        <h1 style="margin-top:16px;">Kick Chat <span style="color:var(--color-primary)">Test</span></h1>
+
+        <div class="status-row">
+            <div class="status-pill loading" id="statusPill">Bağlanıyor...</div>
+        </div>
+
+        <div class="channel-info" id="channelInfo" style="display:none;">
+            <div class="info-item">Kanal <span id="infoSlug">—</span></div>
+            <div class="info-item">Chatroom ID <span id="infoChatroom">—</span></div>
+            <div class="info-item">Durum <span id="infoLive">—</span></div>
+        </div>
+    </div>
+
+    <div class="chat-box">
+        <div class="chat-log" id="chatLog">
+            <div class="chat-empty" id="emptyState">
+                <span class="e-label">Bekleniyor</span>
+                Mesajlar burada görünecek...
+            </div>
+        </div>
+        <div class="chat-footer">
+            <div class="msg-count">Mesaj <span id="msgCount">0</span></div>
+            <button class="clear-btn" onclick="clearChat()">Temizle</button>
+        </div>
+    </div>
+
+    <details class="raw-toggle">
+        <summary>Ham Veri (son event)</summary>
+        <div class="raw-box" id="rawBox">—</div>
+    </details>
+
+    <script>
+        const CHANNEL_SLUG  = 'meyhanecidimitri';
+        const PROXY_URL     = 'ws://localhost:4000';  // proxy-server/server.js
+
+        let proxyWs = null;
+
+        let msgCount  = 0;
+        let pusherInst = null;
+
+        const log      = document.getElementById('chatLog');
+        const empty    = document.getElementById('emptyState');
+        const pill     = document.getElementById('statusPill');
+        const rawBox   = document.getElementById('rawBox');
+        const countEl  = document.getElementById('msgCount');
+
+        function setStatus(text, cls) {
+            pill.textContent = text;
+            pill.className   = `status-pill ${cls}`;
+        }
+
+        function now() {
+            return new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function addSys(text) {
+            const el = document.createElement('div');
+            el.className   = 'sys-msg';
+            el.textContent = text;
+            log.appendChild(el);
+            log.scrollTop  = log.scrollHeight;
+        }
+
+        function addMsg(username, color, content, time) {
+            if (empty.parentNode) empty.remove();
+
+            const profileUrl = `https://kick.com/${username}`;
+            const el = document.createElement('div');
+            el.className = 'msg';
+            el.innerHTML = `
+                <span class="msg-time">${time}</span>
+                <span class="msg-user" style="color:${color || 'var(--color-primary)'};">
+                    ${escapeHtml(username)}
+                    <span class="user-popup">
+                        <div class="popup-name">${escapeHtml(username)}</div>
+                        <a class="popup-link" href="${profileUrl}" target="_blank" rel="noopener noreferrer">
+                            ↗ Kick Profiline Git
+                        </a>
+                        <a class="popup-link" href="https://kick.com/${username}/clips" target="_blank" rel="noopener noreferrer">
+                            ✂ Klipleri
+                        </a>
+                    </span>
+                </span>
+                <span class="msg-text">${linkify(content)}</span>
+            `;
+            log.appendChild(el);
+            log.scrollTop = log.scrollHeight;
+
+            msgCount++;
+            countEl.textContent = msgCount;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        function linkify(raw) {
+            // 1) Metni parçala: emote token'ları ve geri kalanı ayır
+            const parts = [];
+            const emoteRe = /\[emote:(\d+):([^\]]+)\]/g;
+            let last = 0, m;
+            while ((m = emoteRe.exec(raw)) !== null) {
+                if (m.index > last) parts.push({ type: 'text', val: raw.slice(last, m.index) });
+                parts.push({ type: 'emote', id: m[1], name: m[2] });
+                last = m.index + m[0].length;
+            }
+            if (last < raw.length) parts.push({ type: 'text', val: raw.slice(last) });
+
+            // 2) Her parçayı render et
+            return parts.map(p => {
+                if (p.type === 'emote') {
+                    return `<img src="https://files.kick.com/emotes/${p.id}/fullsize" ` +
+                        `alt="${escapeHtml(p.name)}" title="${escapeHtml(p.name)}" ` +
+                        `style="height:22px;width:auto;vertical-align:middle;display:inline-block;margin:0 2px;">`;
+                }
+                // Metin: önce escape, sonra URL linkify
+                return escapeHtml(p.val).replace(
+                    /(https?:\/\/[^\s&lt;&gt;"]+)/g,
+                    '<a href="$1" target="_blank" rel="noopener noreferrer" ' +
+                    'style="color:var(--color-primary);text-decoration:underline;word-break:break-all;">$1</a>'
+                );
+            }).join('');
+        }
+
+        function clearChat() {
+            log.innerHTML = '';
+            msgCount = 0;
+            countEl.textContent = '0';
+        }
+
+        async function init() {
+            setStatus('API çekiliyor...', 'loading');
+
+            try {
+                const res = await fetch(`https://kick.com/api/v1/channels/${CHANNEL_SLUG}`);
+                if (!res.ok) throw new Error(`API ${res.status}`);
+                const data = await res.json();
+
+                const chatroomId = data.chatroom?.id;
+                if (!chatroomId) throw new Error('Chatroom ID bulunamadı');
+
+                // Kanal bilgilerini göster
+                document.getElementById('infoSlug').textContent     = data.slug || CHANNEL_SLUG;
+                document.getElementById('infoChatroom').textContent = chatroomId;
+                document.getElementById('infoLive').textContent     = data.livestream?.is_live ? '🔴 CANLI' : 'Çevrimdışı';
+                document.getElementById('channelInfo').style.display = 'flex';
+
+                tryConnect(chatroomId);
+
+            } catch (err) {
+                setStatus(`Hata: ${err.message}`, 'error');
+                console.error(err);
+            }
+        }
+
+        function tryConnect(chatroomId) {
+            addSys(`→ Proxy'ye bağlanılıyor: ${PROXY_URL}`);
+            setStatus('Proxy\'ye bağlanılıyor...', 'loading');
+
+            if (proxyWs) { try { proxyWs.close(); } catch(e) {} }
+
+            proxyWs = new WebSocket(`${PROXY_URL}?channel=${CHANNEL_SLUG}&chatroomId=${chatroomId}`);
+
+            proxyWs.onopen = () => {
+                addSys('✓ Proxy bağlantısı açıldı — Kick\'e bağlanılıyor...');
+            };
+
+            proxyWs.onmessage = (event) => {
+                let msg;
+                try { msg = JSON.parse(event.data); } catch { return; }
+
+                // Debug: konsola gelen her mesajı yaz
+                if (msg.type === 'chat') {
+                    console.log('[CHAT RAW]', JSON.stringify(msg).substring(0, 200));
+                    rawBox.textContent = JSON.stringify(msg, null, 2);
+                }
+
+                if (msg.type === 'status') {
+                    addSys(`ℹ ${msg.message}`);
+                    setStatus(msg.message, 'loading');
+                }
+                else if (msg.type === 'connected') {
+                    setStatus('Bağlandı ✓ (proxy)', 'connected');
+                    addSys(`✓ Kick'e bağlandı! endpoint=${msg.endpoint}`);
+                }
+                else if (msg.type === 'subscribed') {
+                    addSys(`✓ Kanal aboneliği: ${msg.channel}`);
+                }
+                else if (msg.type === 'chat') {
+                    const d = msg.data || msg;
+                    rawBox.textContent = JSON.stringify(d, null, 2);
+                    const username = d.sender?.username || '?';
+                    const color    = d.sender?.identity?.color || null;
+                    const content  = d.content || '';
+                    addMsg(username, color, content, now());
+                }
+                else if (msg.type === 'error') {
+                    setStatus(`Hata: ${msg.message}`, 'error');
+                    addSys(`❌ ${msg.message}`);
+                }
+            };
+
+            proxyWs.onerror = () => {
+                setStatus('Proxy bağlantı hatası', 'error');
+                addSys('❌ Proxy sunucusuna bağlanılamadı.');
+                addSys('ℹ proxy-server klasöründe "npm install && npm start" komutunu çalıştır.');
+            };
+
+            proxyWs.onclose = (e) => {
+                if (e.code !== 1000) {
+                    setStatus('Bağlantı kesildi', 'error');
+                    addSys(`Bağlantı kesildi (code=${e.code})`);
+                }
+            };
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "kick-chat-proxy",
+  "version": "1.0.0",
+  "description": "Kick chat WebSocket proxy — Kick'e sunucu tarafından bağlanır, frontend'e iletir",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
