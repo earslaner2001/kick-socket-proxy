@@ -1,12 +1,30 @@
 {
   "name": "kick-chat-proxy",
   "version": "1.0.0",
-  "description": "Kick chat WebSocket proxy — Kick'e sunucu tarafından bağlanır, frontend'e iletir",
+  "description": "Kick.com chat WebSocket proxy — connects server-side to Kick's Pusher and forwards messages to local clients",
   "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "kick",
+    "kick.com",
+    "chat",
+    "websocket",
+    "proxy",
+    "pusher",
+    "live-chat",
+    "streaming"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/kick-socket-proxy.git"
+  },
+  "license": "GPL-3.0",
   "dependencies": {
     "ws": "^8.18.0"
   }
