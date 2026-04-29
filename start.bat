@@ -3,12 +3,10 @@ chcp 65001 >nul
 title Kick Socket Proxy
 
 echo.
-echo  ╔══════════════════════════════════════╗
-echo  ║       Kick Socket Proxy              ║
-echo  ╚══════════════════════════════════════╝
+echo  === Kick Socket Proxy ===
 echo.
 
-:: proxy-server klasörüne geç
+:: proxy-server klasorune gec
 cd /d "%~dp0proxy-server"
 
 :: node_modules yoksa npm install yap
@@ -18,14 +16,14 @@ if not exist "node_modules" (
     echo.
 )
 
-:: Proxy'yi arka planda başlat
+:: Proxy'yi ayri pencerede basalt
 echo  [*] Proxy sunucu baslatiliyor... (ws://localhost:4000)
 start "Kick Proxy Server" cmd /k "node server.js"
 
 :: Biraz bekle
 timeout /t 2 /nobreak >nul
 
-:: Ana dizine geç, statik sunucu başlat
+:: Ana dizine gec, statik sunucu basalt
 cd /d "%~dp0"
 echo  [*] Statik sunucu baslatiliyor...
 echo.
